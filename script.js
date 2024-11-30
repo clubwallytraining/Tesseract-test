@@ -2,7 +2,6 @@ const cameraSelect = document.getElementById('cameraSelect');
 const resolutionSelect = document.getElementById('resolutionSelect');
 const camera = document.getElementById('camera');
 const roiElement = document.getElementById('roi');
-const domOverlay = document.getElementById('domOverlay');
 const startBtn = document.getElementById('start');
 const stopBtn = document.getElementById('stop');
 const output = document.getElementById('output');
@@ -58,15 +57,15 @@ function stopCamera() {
     }
 }
 
-// Update ROI and DOM overlay styling dynamically
+// Update ROI dynamically
 function updateOverlay() {
     const cameraRect = camera.getBoundingClientRect();
     const roiRect = roiElement.getBoundingClientRect();
 
-    domOverlay.style.top = `${roiElement.offsetTop}px`;
-    domOverlay.style.left = `${roiElement.offsetLeft}px`;
-    domOverlay.style.width = `${roiRect.width}px`;
-    domOverlay.style.height = `${roiRect.height}px`;
+    roiElement.style.top = `${roiRect.top}px`;
+    roiElement.style.left = `${roiRect.left}px`;
+    roiElement.style.width = `${roiRect.width}px`;
+    roiElement.style.height = `${roiRect.height}px`;
 }
 
 // Process ROI for OCR
@@ -92,23 +91,27 @@ async function processFrame() {
     const ctx = canvas.getContext('2d');
     ctx.drawImage(camera, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight);
 
-    // Change ROI to green to indicate processing
-    roiElement.style.borderColor = 'green';
-
     try {
         const { data: { text } } = await Tesseract.recognize(canvas, 'eng', {
             logger: info => console.log(info)
         });
 
-        output.textContent = text || 'No text detected.';
-        testWindow.textContent = text || 'No test text detected.';
-    } catch (error) {
-        output.textContent = `Error: ${error.message}`;
-        testWindow.textContent = `Error: ${error.message}`;
-    }
+        if (text.trim()) {
+            // Change ROI color to green if text is detected
+            roiElement.style.borderColor = 'green';
 
-    // Reset ROI color back to red after processing
-    roiElement.style.borderColor = 'red';
+            // Update output and test window with extracted text
+            output.textContent = text.trim();
+            testWindow.textContent = text.trim();
+        } else {
+            // Reset ROI to red if no text is detected
+            roiElement.style.borderColor = 'red';
+        }
+    } catch (error) {
+        roiElement.style.borderColor = 'red';
+        output.textContent = '';
+        testWindow.textContent = '';
+    }
 
     requestAnimationFrame(processFrame);
 }
@@ -127,8 +130,8 @@ stopBtn.addEventListener('click', () => {
     processing = false;
     startBtn.style.display = 'inline-block';
     stopBtn.style.display = 'none';
-    output.textContent = 'Scanner stopped.';
-    testWindow.textContent = 'Scanner stopped.';
+    output.textContent = '';
+    testWindow.textContent = '';
 });
 
 cameraSelect.addEventListener('change', startCamera);
