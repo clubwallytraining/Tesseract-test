@@ -64,7 +64,7 @@
             background-color: #fff;
         }
 
-        #output, #testWindow {
+        #output {
             margin-top: 20px;
             padding: 15px;
             width: 100%;
@@ -84,22 +84,9 @@
         <div id="roi"></div>
     </div>
     <div class="controls">
-        <label for="cameraSelect">Camera:</label>
-        <select id="cameraSelect"></select>
-
-        <label for="resolutionSelect">Resolution:</label>
-        <select id="resolutionSelect">
-            <option value="640x480">640x480</option>
-            <option value="1280x720">1280x720</option>
-            <option value="1920x1080">1920x1080</option>
-        </select>
-    </div>
-    <div class="controls">
-        <button id="start">Start</button>
-        <button id="stop" style="display:none;">Stop</button>
+        <button id="start">Start Scanner</button>
     </div>
     <div id="output">Extracted text will appear here</div>
-    <div id="testWindow">Test text will appear here</div>
     <script src="script.js"></script>
 </body>
 </html>
