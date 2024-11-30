@@ -48,8 +48,12 @@ async function populateCameraOptions() {
 
 // Initialize the scanner
 async function initializeScanner() {
-    const deviceId = cameraSelect.value;
+    const deviceId = cameraSelect.value || cameraSelect.options[0].value;
     const resolution = resolutionSelect.value.split('x');
+
+    if (stream) {
+        stopStream();
+    }
 
     stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -67,6 +71,18 @@ async function initializeScanner() {
         startProcessing();
     };
 }
+
+// Stop current video stream
+function stopStream() {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+    }
+}
+
+// Update video feed dynamically on option changes
+cameraSelect.addEventListener('change', initializeScanner);
+resolutionSelect.addEventListener('change', initializeScanner);
 
 // Start processing text in the ROI
 function startProcessing() {
