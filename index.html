@@ -37,25 +37,25 @@
             object-fit: cover;
         }
 
-        canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-
         #roi {
             position: absolute;
             border: 2px solid green;
             box-sizing: border-box;
+            width: 60%; /* Adjustable ROI width */
+            height: 30%; /* Adjustable ROI height */
+            top: 35%; /* Center vertically */
+            left: 20%; /* Center horizontally */
+            pointer-events: none;
         }
 
         #domOverlay {
             position: absolute;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             background-color: rgba(255, 255, 255, 0.1);
+            width: 60%; /* Matches ROI width */
+            height: 30%; /* Matches ROI height */
+            top: 35%;
+            left: 20%;
             pointer-events: none;
         }
 
@@ -92,7 +92,6 @@
 <body>
     <div id="cameraContainer">
         <video id="camera" autoplay playsinline></video>
-        <canvas id="viewport"></canvas>
         <div id="roi"></div>
         <div id="domOverlay"></div>
     </div>
