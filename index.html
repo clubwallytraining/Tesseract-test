@@ -48,17 +48,6 @@
             pointer-events: none;
         }
 
-        #domOverlay {
-            position: absolute;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-            background-color: rgba(255, 255, 255, 0.1);
-            width: 60%; /* Matches ROI width */
-            height: 30%; /* Matches ROI height */
-            top: 35%;
-            left: 20%;
-            pointer-events: none;
-        }
-
         .controls {
             display: flex;
             flex-wrap: wrap;
@@ -93,7 +82,6 @@
     <div id="cameraContainer">
         <video id="camera" autoplay playsinline></video>
         <div id="roi"></div>
-        <div id="domOverlay"></div>
     </div>
     <div class="controls">
         <label for="cameraSelect">Camera:</label>
