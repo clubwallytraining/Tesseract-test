@@ -2,13 +2,15 @@ const cameraSelect = document.getElementById('cameraSelect');
 const resolutionSelect = document.getElementById('resolutionSelect');
 const camera = document.getElementById('camera');
 const canvas = document.getElementById('viewport');
+const roiElement = document.getElementById('roi');
+const domOverlay = document.getElementById('domOverlay');
 const startBtn = document.getElementById('start');
 const stopBtn = document.getElementById('stop');
 const output = document.getElementById('output');
 
 let stream = null;
 let processing = false;
-let roi = { x: 50, y: 50, width: 200, height: 100 };
+let roi = { x: 200, y: 100, width: 300, height: 150 };
 
 // Get available video devices
 async function getCameras() {
@@ -25,7 +27,7 @@ async function getCameras() {
     }
 }
 
-// Start the camera stream with current options
+// Start the camera stream
 async function startCamera() {
     if (stream) stopCamera();
 
@@ -36,16 +38,17 @@ async function startCamera() {
         video: {
             deviceId: deviceId ? { exact: deviceId } : undefined,
             width: { ideal: parseInt(resolution[0]) },
-            height: { ideal: parseInt(resolution[1]) }
+            height: { ideal: parseInt(resolution[1]) },
+            frameRate: { ideal: 30 } // Native frame rate
         }
     });
 
     camera.srcObject = stream;
 
-    // Adjust canvas size and draw ROI
     camera.onloadedmetadata = () => {
         canvas.width = camera.videoWidth;
         canvas.height = camera.videoHeight;
+        updateROI();
         drawROI();
     };
 }
@@ -58,11 +61,25 @@ function stopCamera() {
     }
 }
 
-// Draw ROI (Region of Interest) rectangle
+// Update ROI and DOM overlay positions
+function updateROI() {
+    const containerRect = camera.getBoundingClientRect();
+    roiElement.style.left = `${roi.x}px`;
+    roiElement.style.top = `${roi.y}px`;
+    roiElement.style.width = `${roi.width}px`;
+    roiElement.style.height = `${roi.height}px`;
+
+    domOverlay.style.left = `${roi.x}px`;
+    domOverlay.style.top = `${roi.y}px`;
+    domOverlay.style.width = `${roi.width}px`;
+    domOverlay.style.height = `${roi.height}px`;
+}
+
+// Draw ROI rectangle on the canvas
 function drawROI() {
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = 'red';
+    ctx.strokeStyle = 'green';
     ctx.lineWidth = 2;
     ctx.strokeRect(roi.x, roi.y, roi.width, roi.height);
 }
