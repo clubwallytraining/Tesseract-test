@@ -79,11 +79,10 @@
     </style>
 </head>
 <body>
-    <div id="cameraContainer">
-        <video id="camera" autoplay playsinline></video>
-        <div id="roi"></div>
-    </div>
     <div class="controls">
+        <button id="start">Start Scanner</button>
+    </div>
+    <div class="controls" id="cameraControls" style="display: none;">
         <label for="cameraSelect">Camera:</label>
         <select id="cameraSelect"></select>
 
@@ -94,10 +93,11 @@
             <option value="1920x1080">1920x1080</option>
         </select>
     </div>
-    <div class="controls">
-        <button id="start">Start Scanner</button>
+    <div id="cameraContainer" style="display: none;">
+        <video id="camera" autoplay playsinline></video>
+        <div id="roi"></div>
     </div>
-    <div id="output">Extracted text will appear here</div>
+    <div id="output" style="display: none;">Extracted text will appear here</div>
     <script src="script.js"></script>
 </body>
 </html>
