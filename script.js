@@ -6,6 +6,7 @@ const domOverlay = document.getElementById('domOverlay');
 const startBtn = document.getElementById('start');
 const stopBtn = document.getElementById('stop');
 const output = document.getElementById('output');
+const testWindow = document.getElementById('testWindow');
 
 let stream = null;
 let processing = false;
@@ -91,16 +92,23 @@ async function processFrame() {
     const ctx = canvas.getContext('2d');
     ctx.drawImage(camera, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight);
 
-    output.textContent = 'Processing...';
+    // Change ROI to green to indicate processing
+    roiElement.style.borderColor = 'green';
 
     try {
         const { data: { text } } = await Tesseract.recognize(canvas, 'eng', {
             logger: info => console.log(info)
         });
+
         output.textContent = text || 'No text detected.';
+        testWindow.textContent = text || 'No test text detected.';
     } catch (error) {
         output.textContent = `Error: ${error.message}`;
+        testWindow.textContent = `Error: ${error.message}`;
     }
+
+    // Reset ROI color back to red after processing
+    roiElement.style.borderColor = 'red';
 
     requestAnimationFrame(processFrame);
 }
@@ -120,6 +128,7 @@ stopBtn.addEventListener('click', () => {
     startBtn.style.display = 'inline-block';
     stopBtn.style.display = 'none';
     output.textContent = 'Scanner stopped.';
+    testWindow.textContent = 'Scanner stopped.';
 });
 
 cameraSelect.addEventListener('change', startCamera);
