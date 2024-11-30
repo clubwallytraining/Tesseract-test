@@ -14,7 +14,7 @@ let roi = { x: 50, y: 50, width: 200, height: 100 };
 async function getCameras() {
     const devices = await navigator.mediaDevices.enumerateDevices();
     const videoDevices = devices.filter(device => device.kind === 'videoinput');
-    cameraSelect.innerHTML = videoDevices.map((device, index) => 
+    cameraSelect.innerHTML = videoDevices.map((device, index) =>
         `<option value="${device.deviceId}">${device.label || `Camera ${index + 1}`}</option>`
     ).join('');
 
@@ -25,7 +25,7 @@ async function getCameras() {
     }
 }
 
-// Start the camera stream
+// Start the camera stream with current options
 async function startCamera() {
     if (stream) stopCamera();
 
@@ -41,7 +41,13 @@ async function startCamera() {
     });
 
     camera.srcObject = stream;
-    drawROI();
+
+    // Adjust canvas size and draw ROI
+    camera.onloadedmetadata = () => {
+        canvas.width = camera.videoWidth;
+        canvas.height = camera.videoHeight;
+        drawROI();
+    };
 }
 
 // Stop the camera stream
@@ -52,19 +58,16 @@ function stopCamera() {
     }
 }
 
-// Draw the ROI rectangle
+// Draw ROI (Region of Interest) rectangle
 function drawROI() {
     const ctx = canvas.getContext('2d');
-    canvas.width = camera.videoWidth;
-    canvas.height = camera.videoHeight;
-
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.strokeStyle = 'red';
     ctx.lineWidth = 2;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.strokeRect(roi.x, roi.y, roi.width, roi.height);
 }
 
-// Process the ROI frame for OCR
+// Process ROI for OCR
 async function processFrame() {
     if (!processing) return;
 
@@ -86,7 +89,7 @@ async function processFrame() {
     requestAnimationFrame(processFrame);
 }
 
-// Event listeners for buttons and dynamic updates
+// Event listeners for controls
 startBtn.addEventListener('click', async () => {
     await startCamera();
     processing = true;
@@ -103,7 +106,6 @@ stopBtn.addEventListener('click', () => {
     output.textContent = 'Scanner stopped.';
 });
 
-// Update camera stream on camera or resolution change
 cameraSelect.addEventListener('change', startCamera);
 resolutionSelect.addEventListener('change', startCamera);
 
