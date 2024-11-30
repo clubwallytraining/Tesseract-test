@@ -1,28 +1,38 @@
+const startBtn = document.getElementById('start');
 const cameraSelect = document.getElementById('cameraSelect');
 const resolutionSelect = document.getElementById('resolutionSelect');
+const cameraContainer = document.getElementById('cameraContainer');
+const cameraControls = document.getElementById('cameraControls');
 const camera = document.getElementById('camera');
 const roiElement = document.getElementById('roi');
-const startBtn = document.getElementById('start');
 const output = document.getElementById('output');
 
 let stream = null;
 let processing = false;
 
-// Request permissions and start scanner
+// Start Scanner Button
 startBtn.addEventListener('click', async () => {
     try {
         // Request camera permissions
-        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        await navigator.mediaDevices.getUserMedia({ video: true });
 
-        // Refresh to populate camera options and start scanning
-        location.reload();
+        // Populate camera options after permissions are granted
+        await populateCameraOptions();
+
+        // Display camera controls and video container
+        cameraControls.style.display = 'flex';
+        cameraContainer.style.display = 'block';
+        output.style.display = 'block';
+
+        // Initialize scanner
+        initializeScanner();
     } catch (err) {
         alert("Camera permissions are required to use this scanner.");
     }
 });
 
-// Initialize scanner after permissions are granted
-async function initializeScanner() {
+// Populate camera options
+async function populateCameraOptions() {
     const devices = await navigator.mediaDevices.enumerateDevices();
     const videoDevices = devices.filter(device => device.kind === 'videoinput');
 
@@ -31,19 +41,19 @@ async function initializeScanner() {
         return;
     }
 
-    // Populate camera options
     cameraSelect.innerHTML = videoDevices.map((device, index) =>
         `<option value="${device.deviceId}">${device.label || `Camera ${index + 1}`}</option>`
     ).join('');
+}
 
-    // Select the first available camera
-    const defaultDeviceId = videoDevices[0].deviceId;
-
-    // Set up video stream
+// Initialize the scanner
+async function initializeScanner() {
+    const deviceId = cameraSelect.value;
     const resolution = resolutionSelect.value.split('x');
+
     stream = await navigator.mediaDevices.getUserMedia({
         video: {
-            deviceId: { exact: defaultDeviceId },
+            deviceId: { exact: deviceId },
             width: { ideal: parseInt(resolution[0]) },
             height: { ideal: parseInt(resolution[1]) },
             frameRate: { ideal: 30 }
@@ -58,7 +68,7 @@ async function initializeScanner() {
     };
 }
 
-// Start text processing
+// Start processing text in the ROI
 function startProcessing() {
     processing = true;
 
@@ -101,11 +111,4 @@ function startProcessing() {
     }
 
     processFrame();
-}
-
-// Initialize scanner if permissions are already granted
-if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices.enumerateDevices().then(() => {
-        initializeScanner();
-    });
 }
