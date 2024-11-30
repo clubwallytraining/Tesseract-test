@@ -3,110 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-Time Text Scanner</title>
+    <title>Enhanced Real-Time OCR</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-        }
-        video, canvas {
-            width: 90%;
-            max-width: 400px;
-            margin: 10px auto;
-            display: block;
-        }
-        #output {
-            margin: 20px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            word-wrap: break-word;
-            white-space: pre-wrap;
-        }
-        button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 16px;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Real-Time Text Scanner</h1>
+    <h1>Real-Time OCR with Advanced Features</h1>
+    <div>
+        <label for="cameraSelect">Select Camera:</label>
+        <select id="cameraSelect"></select>
+
+        <label for="resolutionSelect">Resolution:</label>
+        <select id="resolutionSelect">
+            <option value="640x480">640x480</option>
+            <option value="1280x720">1280x720</option>
+            <option value="1920x1080">1920x1080</option>
+        </select>
+
+        <label for="patchSize">Patch Size:</label>
+        <input type="number" id="patchSize" min="1" max="100" value="20">
+    </div>
     <video id="camera" autoplay playsinline></video>
-    <canvas id="viewport" style="display:none;"></canvas>
+    <canvas id="viewport"></canvas>
     <button id="start">Start Scanner</button>
     <button id="stop" style="display:none;">Stop Scanner</button>
     <div id="output">Extracted text will appear here</div>
 
-    <script>
-        const camera = document.getElementById('camera');
-        const canvas = document.getElementById('viewport');
-        const startBtn = document.getElementById('start');
-        const stopBtn = document.getElementById('stop');
-        const output = document.getElementById('output');
-
-        let stream = null;
-        let processing = false;
-
-        // Initialize the camera
-        async function initCamera() {
-            stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            camera.srcObject = stream;
-        }
-
-        // Stop the camera
-        function stopCamera() {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-                stream = null;
-            }
-        }
-
-        // Capture a frame from the video
-        function captureFrame() {
-            const ctx = canvas.getContext('2d');
-            canvas.width = camera.videoWidth;
-            canvas.height = camera.videoHeight;
-            ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
-            return canvas.toDataURL('image/png');
-        }
-
-        // Process frames in real-time
-        async function processVideo() {
-            if (!processing) return;
-            const frame = captureFrame();
-            output.textContent = "Processing...";
-            try {
-                const { data: { text } } = await Tesseract.recognize(frame, 'eng', {
-                    logger: info => console.log(info) // Log OCR progress
-                });
-                output.textContent = text || "No text detected";
-            } catch (error) {
-                output.textContent = `Error: ${error.message}`;
-            }
-            requestAnimationFrame(processVideo); // Continue processing the next frame
-        }
-
-        // Start the scanner
-        startBtn.addEventListener('click', () => {
-            startBtn.style.display = 'none';
-            stopBtn.style.display = 'inline-block';
-            initCamera().then(() => {
-                processing = true;
-                processVideo();
-            });
-        });
-
-        // Stop the scanner
-        stopBtn.addEventListener('click', () => {
-            stopCamera();
-            processing = false;
-            startBtn.style.display = 'inline-block';
-            stopBtn.style.display = 'none';
-            output.textContent = "Scanner stopped.";
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
