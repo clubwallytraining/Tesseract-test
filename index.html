@@ -84,6 +84,17 @@
         <div id="roi"></div>
     </div>
     <div class="controls">
+        <label for="cameraSelect">Camera:</label>
+        <select id="cameraSelect"></select>
+
+        <label for="resolutionSelect">Resolution:</label>
+        <select id="resolutionSelect">
+            <option value="640x480">640x480</option>
+            <option value="1280x720">1280x720</option>
+            <option value="1920x1080">1920x1080</option>
+        </select>
+    </div>
+    <div class="controls">
         <button id="start">Start Scanner</button>
     </div>
     <div id="output">Extracted text will appear here</div>
