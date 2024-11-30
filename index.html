@@ -39,7 +39,7 @@
 
         #roi {
             position: absolute;
-            border: 2px solid green;
+            border: 2px solid red; /* Starts as red (idle) */
             box-sizing: border-box;
             width: 60%; /* Adjustable ROI width */
             height: 30%; /* Adjustable ROI height */
@@ -75,7 +75,7 @@
             background-color: #fff;
         }
 
-        #output {
+        #output, #testWindow {
             margin-top: 20px;
             padding: 15px;
             width: 100%;
@@ -111,6 +111,7 @@
         <button id="stop" style="display:none;">Stop</button>
     </div>
     <div id="output">Extracted text will appear here</div>
+    <div id="testWindow">Test text will appear here</div>
     <script src="script.js"></script>
 </body>
 </html>
