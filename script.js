@@ -1,3 +1,5 @@
+const cameraSelect = document.getElementById('cameraSelect');
+const resolutionSelect = document.getElementById('resolutionSelect');
 const camera = document.getElementById('camera');
 const roiElement = document.getElementById('roi');
 const startBtn = document.getElementById('start');
@@ -6,20 +8,20 @@ const output = document.getElementById('output');
 let stream = null;
 let processing = false;
 
-// Start Scanner: Chain begins
+// Request permissions and start scanner
 startBtn.addEventListener('click', async () => {
     try {
         // Request camera permissions
         stream = await navigator.mediaDevices.getUserMedia({ video: true });
 
-        // If permissions are granted, refresh the page to populate options
+        // Refresh to populate camera options and start scanning
         location.reload();
     } catch (err) {
         alert("Camera permissions are required to use this scanner.");
     }
 });
 
-// Initialize the camera, start scanning, and detect text
+// Initialize scanner after permissions are granted
 async function initializeScanner() {
     const devices = await navigator.mediaDevices.enumerateDevices();
     const videoDevices = devices.filter(device => device.kind === 'videoinput');
@@ -29,15 +31,21 @@ async function initializeScanner() {
         return;
     }
 
+    // Populate camera options
+    cameraSelect.innerHTML = videoDevices.map((device, index) =>
+        `<option value="${device.deviceId}">${device.label || `Camera ${index + 1}`}</option>`
+    ).join('');
+
     // Select the first available camera
     const defaultDeviceId = videoDevices[0].deviceId;
 
-    // Set up the video stream
+    // Set up video stream
+    const resolution = resolutionSelect.value.split('x');
     stream = await navigator.mediaDevices.getUserMedia({
         video: {
             deviceId: { exact: defaultDeviceId },
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
+            width: { ideal: parseInt(resolution[0]) },
+            height: { ideal: parseInt(resolution[1]) },
             frameRate: { ideal: 30 }
         }
     });
@@ -57,7 +65,6 @@ function startProcessing() {
     function processFrame() {
         if (!processing) return;
 
-        // Calculate ROI bounds relative to the video resolution
         const roiBounds = roiElement.getBoundingClientRect();
         const cameraBounds = camera.getBoundingClientRect();
 
@@ -69,7 +76,6 @@ function startProcessing() {
         const sWidth = roiBounds.width * scaleX;
         const sHeight = roiBounds.height * scaleY;
 
-        // Extract ROI frame
         const canvas = document.createElement('canvas');
         canvas.width = sWidth;
         canvas.height = sHeight;
@@ -77,19 +83,18 @@ function startProcessing() {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(camera, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight);
 
-        // Process text in ROI
         Tesseract.recognize(canvas, 'eng')
             .then(({ data: { text } }) => {
                 if (text.trim()) {
                     roiElement.style.borderColor = 'green'; // Turn ROI green
-                    output.textContent = text.trim(); // Display text
+                    output.textContent = text.trim(); // Show text in output
                 } else {
                     roiElement.style.borderColor = 'red'; // Reset ROI to red
                 }
             })
             .catch(err => {
-                console.error(err);
                 roiElement.style.borderColor = 'red';
+                output.textContent = '';
             });
 
         requestAnimationFrame(processFrame);
@@ -98,7 +103,9 @@ function startProcessing() {
     processFrame();
 }
 
-// Start the scanner when the page loads (if permissions are already granted)
-if (navigator.mediaDevices && stream) {
-    initializeScanner();
+// Initialize scanner if permissions are already granted
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.enumerateDevices().then(() => {
+        initializeScanner();
+    });
 }
