@@ -1,7 +1,6 @@
 const cameraSelect = document.getElementById('cameraSelect');
 const resolutionSelect = document.getElementById('resolutionSelect');
 const camera = document.getElementById('camera');
-const canvas = document.getElementById('viewport');
 const roiElement = document.getElementById('roi');
 const domOverlay = document.getElementById('domOverlay');
 const startBtn = document.getElementById('start');
@@ -10,7 +9,6 @@ const output = document.getElementById('output');
 
 let stream = null;
 let processing = false;
-let roi = { x: 200, y: 100, width: 300, height: 150 };
 
 // Get available video devices
 async function getCameras() {
@@ -39,17 +37,15 @@ async function startCamera() {
             deviceId: deviceId ? { exact: deviceId } : undefined,
             width: { ideal: parseInt(resolution[0]) },
             height: { ideal: parseInt(resolution[1]) },
-            frameRate: { ideal: 30 } // Native frame rate
+            frameRate: { ideal: 30 }
         }
     });
 
     camera.srcObject = stream;
 
     camera.onloadedmetadata = () => {
-        canvas.width = camera.videoWidth;
-        canvas.height = camera.videoHeight;
-        updateROI();
-        drawROI();
+        camera.play();
+        updateOverlay();
     };
 }
 
@@ -61,41 +57,44 @@ function stopCamera() {
     }
 }
 
-// Update ROI and DOM overlay positions
-function updateROI() {
-    const containerRect = camera.getBoundingClientRect();
-    roiElement.style.left = `${roi.x}px`;
-    roiElement.style.top = `${roi.y}px`;
-    roiElement.style.width = `${roi.width}px`;
-    roiElement.style.height = `${roi.height}px`;
+// Update ROI and DOM overlay styling dynamically
+function updateOverlay() {
+    const cameraRect = camera.getBoundingClientRect();
+    const roiRect = roiElement.getBoundingClientRect();
 
-    domOverlay.style.left = `${roi.x}px`;
-    domOverlay.style.top = `${roi.y}px`;
-    domOverlay.style.width = `${roi.width}px`;
-    domOverlay.style.height = `${roi.height}px`;
-}
-
-// Draw ROI rectangle on the canvas
-function drawROI() {
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = 'green';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(roi.x, roi.y, roi.width, roi.height);
+    domOverlay.style.top = `${roiElement.offsetTop}px`;
+    domOverlay.style.left = `${roiElement.offsetLeft}px`;
+    domOverlay.style.width = `${roiRect.width}px`;
+    domOverlay.style.height = `${roiRect.height}px`;
 }
 
 // Process ROI for OCR
 async function processFrame() {
     if (!processing) return;
 
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
+    const roiBounds = roiElement.getBoundingClientRect();
+    const cameraBounds = camera.getBoundingClientRect();
 
-    const frame = ctx.getImageData(roi.x, roi.y, roi.width, roi.height);
+    // Calculate actual dimensions relative to video resolution
+    const scaleX = camera.videoWidth / cameraBounds.width;
+    const scaleY = camera.videoHeight / cameraBounds.height;
+
+    const sx = (roiBounds.left - cameraBounds.left) * scaleX;
+    const sy = (roiBounds.top - cameraBounds.top) * scaleY;
+    const sWidth = roiBounds.width * scaleX;
+    const sHeight = roiBounds.height * scaleY;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = sWidth;
+    canvas.height = sHeight;
+
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(camera, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight);
+
     output.textContent = 'Processing...';
 
     try {
-        const { data: { text } } = await Tesseract.recognize(frame, 'eng', {
+        const { data: { text } } = await Tesseract.recognize(canvas, 'eng', {
             logger: info => console.log(info)
         });
         output.textContent = text || 'No text detected.';
